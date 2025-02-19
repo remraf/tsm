@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+#
+# Description: HSM recall/transfer of files
+#
+# Created: 2025-02-18
+# Author: tonyvo
+#
+####
+
+
+JIRA=
+JIRA_DIR="/tmp/${JIRA}.recall"
+ERRFILE="${JIRA_DIR}/${JIRA}.err"
+LOGFILE="${JIRA_DIR}/${JIRA}.log"
+FILE_LIST=
+SRC=
+DEST=
+
+Create_logdir()
+{
+    # Create log directory in /tmp
+    if [[ -d "$JIRA_DIR" ]]
+    then
+	echo "$JIRA_DIR" already exists
+    else
+	echo "Creating Directory: $JIRA_DIR"
+        mkdir $JIRA_DIR
+    fi
+}
+
+
+Recall_files()
+{
+    # Recall files from SRC
+    while IFS= read -ra line
+    do
+        dsmrecall -D -R \
+            -L "$LOGFILE" \
+            -errorlogname="$ERRFILE" \
+            "$line" | tee -a "${JIRA_DIR}/${JIRA}.out"
+    done < $FILE_LIST
+}
+
+
+Transfer_directories()
+{
+    # Transfer files to DEST using mmxcp
+    mmxcp enable \
+       --source /vol/rdcw-fs1/wucci/Archive/Cryo-EM/Processing/Vierstra/NComms_2024_paper/processing/  \
+       --target /vol/rdcw-fs1/wucci/Active/Cryo-EM/CryoSPARC_Processing/Vierstra/NComms_2024_paper/processing/ \
+       -N storage1-nsd7.ris.wustl.edu,storage1-nsd8.ris.wustl.edu,storage1-nsd9.ris.wustl.edu,storage1-nsd10.ris.wustl.e
+du,storage1-nsd11.ris.wustl.edu,storage1-nsd12.ris.wustl.edu \
+       -s /tmp
+}
+
+Transfer_files()
+{
+    # Transfer files to DEST using rsync
+    while IFS= read -ra line
+    do
+        rsync -vPaRL "$line" $DEST
+    done < $FILE_LIST
+}
+
+
+####################
+#      MAIN        #
+####################
+
+Create_logdir
+Recall_files
+#Transfer_directories
+#Transfer_files
