@@ -8,12 +8,17 @@
 
 
 JIRA=
+FILE_LIST= 
+SRC=
+DEST=
 JIRA_DIR="/tmp/${JIRA}.recall"
 ERRFILE="${JIRA_DIR}/${JIRA}.err"
 LOGFILE="${JIRA_DIR}/${JIRA}.log"
-FILE_LIST=
-SRC=
-DEST=
+MENU=("Recall files" "Recall directories" "Transfer files" "Transfer directories" "QUIT")
+NSD_LIST="storage1-nsd7.ris.wustl.edu,storage1-nsd8.ris.wustl.edu,storage1-nsd9.ris.wustl.edu,storage1-nsd10.ris.wustl.edu,storage1-nsd11.ris.wustl.edu,storage1-nsd12.ris.wustl.edu"
+PS3="Enter selection [1-5]: "
+TMP_FILES="/tmp"
+
 
 create_logdir()
 {
@@ -41,16 +46,15 @@ recall_files()
 }
 
 
-transfer_directories()
+recall_directories()
 {
-    # Transfer files to DEST using mmxcp
-    mmxcp enable \
-       --source /vol/rdcw-fs1/wucci/Archive/Cryo-EM/Processing/Vierstra/NComms_2024_paper/processing/  \
-       --target /vol/rdcw-fs1/wucci/Active/Cryo-EM/CryoSPARC_Processing/Vierstra/NComms_2024_paper/processing/ \
-       -N storage1-nsd7.ris.wustl.edu,storage1-nsd8.ris.wustl.edu,storage1-nsd9.ris.wustl.edu,storage1-nsd10.ris.wustl.e
-du,storage1-nsd11.ris.wustl.edu,storage1-nsd12.ris.wustl.edu \
-       -s /tmp
+    # Recall files from FILE_LIST
+    dsmrecall -D -R \
+        -L "$LOGFILE" \
+        -errorlogname="$ERRFILE" \
+        "$SRC" | tee -a "${JIRA_DIR}/${JIRA}.out"
 }
+
 
 transfer_files()
 {
@@ -62,11 +66,47 @@ transfer_files()
 }
 
 
+transfer_directories()
+{
+    # Transfer files to DEST using mmxcp
+    if [[ ! -d "$DEST" ]]
+    then
+        mkdir -p "$DEST"
+    fi
+
+    mmxcp enable \
+       --source "$SRC" \
+       --target "$DEST" \
+       -N "$NSD_LIST" \
+       -s "$TMP_FILES"
+}
+
+
+
 ####################
 #      MAIN        #
 ####################
 
-create_logdir
-recall_files
-#transfer_directories
-#transfer_files
+select CHOICE in "${MENU[@]}"
+do
+    case $REPLY in
+        1)
+            create_logdir
+            recall_files
+            ;;
+        2)
+            create_logdir
+            recall_directories
+            ;;
+        3)
+            transfer_files
+            ;;
+        4)
+            transfer_directories
+            ;;
+        5)
+            echo Bye
+            break
+	    ;;
+    esac
+done
