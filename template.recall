@@ -61,7 +61,7 @@ transfer_files()
     # Transfer files to DEST using rsync
     while IFS= read -ra line
     do
-        rsync -vPaRL "$line" $DEST
+        rsync -vPaR "$line" $DEST
     done < $FILE_LIST
 }
 
