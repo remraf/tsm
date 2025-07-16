@@ -36,6 +36,7 @@ create_logdir()
 recall_files()
 {
     # Recall files from SRC
+    date >> ${JIRA_DIR}/${JIRA}.timestamp
     while IFS= read -ra line
     do
         dsmrecall -D -R \
@@ -43,16 +44,17 @@ recall_files()
             -errorlogname="$ERRFILE" \
             "$line" | tee -a "${JIRA_DIR}/${JIRA}.out"
     done < $FILE_LIST
+    date >> ${JIRA_DIR}/${JIRA}.timestamp
 }
 
 
 recall_directories()
 {
     # Recall files from FILE_LIST
-    dsmrecall -D -R \
+    date >> ${JIRA_DIR}/${JIRA}.timestamp; time dsmrecall -D -R \
         -L "$LOGFILE" \
         -errorlogname="$ERRFILE" \
-        "$SRC" | tee -a "${JIRA_DIR}/${JIRA}.out"
+        "$SRC" | tee -a "${JIRA_DIR}/${JIRA}.out"; date >> ${JIRA_DIR}/${JIRA}.timestamp
 }
 
 
